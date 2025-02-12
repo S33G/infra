@@ -1,0 +1,11 @@
+repos:
+  # Based on https://github.com/ansible/ansible-lint/blob/main/.pre-commit-hooks.yaml
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v25.1.2
+    hooks:
+      - id: ansible-lint
+        stages: [pre-push]
+        # https://github.com/pre-commit/pre-commit/issues/1110#issuecomment-747812172
+        entry: bash -c 'cd ansible && python3 -m ansiblelint -v --force-color'
+        language: python
+        files: ^ansible/
