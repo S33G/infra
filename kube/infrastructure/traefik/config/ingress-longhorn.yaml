@@ -3,6 +3,9 @@ kind: IngressRoute
 metadata:
   name: longhorn
   namespace: longhorn-system
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: longhorn.k3s.s33g.uk
+    external-dns.alpha.kubernetes.io/target: 10.10.0.240
 spec:
   entryPoints:
     - websecure
