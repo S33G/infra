@@ -16,6 +16,7 @@ spec:
       values: |
         provider:
           name: cloudflare
+        logLevel: debug
         env:
           - name: CF_API_TOKEN
             valueFrom:
@@ -25,8 +26,6 @@ spec:
         sources:
           - ingress
           - traefik-proxy
-        extraArgs:
-          - --log-level=debug
         policy: sync
         txtOwnerId: k3s-homelab
         domainFilters:
