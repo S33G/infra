@@ -8,12 +8,10 @@ spec:
   source:
     repoURL: https://twin.github.io/helm-charts
     chart: gatus
-    targetRevision: 3.5.1
+    targetRevision: 1.4.5
     helm:
       releaseName: gatus
       values: |
-        image:
-          tag: "v5.13.1"
         persistence:
           enabled: true
           storageClass: longhorn
