@@ -3,15 +3,23 @@ kind: Application
 metadata:
   name: external-secrets
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
-  source:
-    repoURL: https://charts.external-secrets.io
-    chart: external-secrets
-    targetRevision: 0.12.1
-    helm:
-      values: |
-        installCRDs: true
+  sources:
+    - repoURL: https://charts.external-secrets.io
+      chart: external-secrets
+      targetRevision: 0.12.1
+      helm:
+        releaseName: external-secrets
+        values: |
+          installCRDs: true
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: kube/infrastructure/external-secrets
+      directory:
+        include: 'secret-store.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: external-secrets
@@ -21,3 +29,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

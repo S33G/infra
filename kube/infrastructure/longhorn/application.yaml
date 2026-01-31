@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: longhorn
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
   source:
@@ -10,6 +12,7 @@ spec:
     chart: longhorn
     targetRevision: 1.7.2
     helm:
+      releaseName: longhorn
       values: |
         defaultSettings:
           defaultReplicaCount: 1
@@ -25,3 +28,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: external-dns
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
@@ -10,6 +12,7 @@ spec:
     chart: external-dns
     targetRevision: 1.15.0
     helm:
+      releaseName: external-dns
       values: |
         provider:
           name: cloudflare
@@ -34,3 +37,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

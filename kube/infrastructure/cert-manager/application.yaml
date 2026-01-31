@@ -3,16 +3,22 @@ kind: Application
 metadata:
   name: cert-manager
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
-  source:
-    repoURL: https://charts.jetstack.io
-    chart: cert-manager
-    targetRevision: v1.16.2
-    helm:
-      values: |
-        crds:
-          enabled: true
+  sources:
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: v1.16.2
+      helm:
+        releaseName: cert-manager
+        values: |
+          crds:
+            enabled: true
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: kube/infrastructure/cert-manager/issuers
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
@@ -22,3 +28,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

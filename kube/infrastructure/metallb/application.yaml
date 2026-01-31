@@ -3,12 +3,21 @@ kind: Application
 metadata:
   name: metallb
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
-  source:
-    repoURL: https://metallb.github.io/metallb
-    chart: metallb
-    targetRevision: 0.14.9
+  sources:
+    - repoURL: https://metallb.github.io/metallb
+      chart: metallb
+      targetRevision: 0.14.9
+      helm:
+        releaseName: metallb
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: kube/infrastructure/metallb
+      directory:
+        include: 'config.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system
@@ -18,3 +27,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
