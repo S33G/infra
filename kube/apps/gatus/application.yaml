@@ -25,6 +25,44 @@ spec:
             memory: 512Mi
         serviceMonitor:
           enabled: false
+        config:
+          endpoints:
+            - name: ArgoCD
+              url: https://argocd.k3s.s33g.uk
+              interval: 60s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 2000"
+            - name: Grafana
+              url: https://grafana.k3s.s33g.uk
+              interval: 60s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 2000"
+            - name: Prometheus
+              url: https://prometheus.k3s.s33g.uk
+              interval: 60s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 2000"
+            - name: Alertmanager
+              url: https://alertmanager.k3s.s33g.uk
+              interval: 60s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 2000"
+            - name: Longhorn UI
+              url: https://longhorn.k3s.s33g.uk
+              interval: 60s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 2000"
+            - name: Gatus (self-check)
+              url: https://gatus.k3s.s33g.uk
+              interval: 120s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 1000"
   destination:
     server: https://kubernetes.default.svc
     namespace: gatus
