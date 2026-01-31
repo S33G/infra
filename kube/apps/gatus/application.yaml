@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gatus
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://twin.github.io/helm-charts
+    chart: gatus
+    targetRevision: 3.5.1
+    helm:
+      releaseName: gatus
+      values: |
+        image:
+          tag: "v5.13.1"
+        persistence:
+          enabled: true
+          storageClass: longhorn
+          size: 2Gi
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        serviceMonitor:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gatus
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
