@@ -1,0 +1,9 @@
+---
+- name: Deploy public web
+  hosts: c3po
+  vars:
+    nginx_public: /etc/nginx_public
+    nginx_port: 8069
+  become: true
+  roles:
+    - role: public-www

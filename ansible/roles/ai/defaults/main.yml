@@ -1,0 +1,211 @@
+docker_user: "{{ ansible_user }}"
+
+host: "{{ ansible_host }}"
+
+install_container_toolkit: true
+nvidia_driver: 0
+common_env: &common_env
+  TZ: Europe/London
+  PUID: "1000"
+  PGID: "1000"
+
+ai_ports:
+  node_exporter: 5050
+  dcgm_exporter: 5051
+  ollama_webui: 5000
+  grafana: 5006
+  ollama: 5001
+  piper: 5002
+  whisper: 5003
+  prometheus: 5005
+  searxng: 5004
+  stable_diffusion_webui: 5007
+
+
+gpu_passthrough:
+  - driver: nvidia
+    device_ids: [0, 1]
+    capabilities:
+      - gpu
+      - utility
+      - compute
+ai_containers:
+  # region whisper
+  - name: whisper
+    image: lscr.io/linuxserver/faster-whisper:gpu-v2.4.0-ls69
+    env:
+      # https://docs.linuxserver.io/images/docker-faster-whisper/
+      <<: *common_env
+      WHISPER_BEAM: "3"
+      WHISPER_LANG: en
+      WHISPER_MODEL: medium-int8
+      # LOG_LEVEL: DEBUG
+    volumes:
+      - "/opt/whisper:/config"
+    ports:
+      - "{{ ai_ports.whisper }}:10300"
+    # restart: unless-stopped
+    device_requests: "{{ gpu_passthrough }}"
+    networks:
+      - name: ai
+  # endregion
+  # region piper
+  - name: piper
+    image: slackr31337/wyoming-piper-gpu:v2025.02.2
+    env:
+      # https://github.com/slackr31337/wyoming-piper-gpu
+      # https://github.com/rhasspy/wyoming-piper
+      <<: *common_env
+      PIPER_PROCS: "4"
+      PIPER_VOICE: en_GB-aru-medium
+    volumes:
+      - /opt/piper:/data
+    ports:
+      - "{{ ai_ports.piper }}:10200"
+    device_requests: "{{ gpu_passthrough }}"
+    networks:
+      - name: ai
+  # endregion
+  # region ollama
+  - name: ollama
+    image: docker.io/ollama/ollama:latest
+    env:
+      <<: *common_env
+      OLLAMA_KEEP_ALIVE: 24h
+      OLLAMA_NUM_PARALLEL: "2"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    ports:
+      - "{{ ai_ports.ollama }}:11434"
+    volumes:
+      - "/opt/ollama:/root/.ollama"
+    networks:
+      - name: ai
+    # restart: unless-stopped
+    device_requests: "{{ gpu_passthrough }}"
+  # endregion
+  # region ollama-webui
+  - name: ollama-webui
+    image: ghcr.io/open-webui/open-webui:main
+    env:
+      # https://docs.openwebui.com/getting-started/env-configuration#default_models
+      <<: *common_env
+      OLLAMA_BASE_URLS: "http://ollama:11434"
+      ENV: dev
+      WEBUI_AUTH: "False"
+      WEBUI_NAME: Ollama WebUI
+      WEBUI_URL: http://ai.s33g.uk:8080
+      WEBUI_SECRET_KEY: t0p-s3cr3t
+    ports:
+      - "{{ ai_ports.ollama_webui }}:8080"
+    volumes:
+      - /opt/ollama-webui:/app/backend/data
+    # restart: unless-stopped
+    networks:
+      - name: ai
+  # endregion
+  # region nginx
+  - name: nginx
+    image: nginx:1.28.0
+    ports:
+      - "80:80"
+    restart_policy: unless-stopped
+    volumes:
+      - /etc/nginx/conf.d:/etc/nginx/conf.d
+      - /usr/share/nginx/html:/usr/share/nginx/html
+    networks:
+      - name: ai
+  # endregion
+  # region dcgm-exporter
+  - name: dcgm-exporter
+    image: nvcr.io/nvidia/k8s/dcgm-exporter:2.4.6-2.6.10-ubuntu20.04
+    ports:
+      - "{{ ai_ports.dcgm_exporter }}:9400"
+    env:
+      DCGM_EXPORTER_NO_HOSTNAME: "true"
+    capabilities:
+      - SYS_ADMIN
+    device_requests: "{{ gpu_passthrough }}"
+    networks:
+      - name: ai
+  # endregion
+  # region node-exporter
+  - name: node-exporter
+    image: quay.io/prometheus/node-exporter:v1.9.1
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    ports:
+      - "{{ ai_ports.node_exporter }}:9100"
+    networks:
+      - name: ai
+  # endregion
+  # region prometheus
+  - name: prometheus
+    image: prom/prometheus:v3.3.0
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "{{ ai_ports.prometheus }}:9090"
+    volumes:
+      - /opt/prometheus:/etc/prometheus
+    env:
+      <<: *common_env
+    networks:
+      - name: ai
+  # endregion
+  # region grafana
+  - name: grafana
+    image: grafana/grafana:12.0.0
+    user: "{{ common_env.PUID }}:{{ common_env.PGID }}"
+    ports:
+      - "{{ ai_ports.grafana }}:3000"
+    volumes:
+      - /opt/grafana/config:/var/lib/grafana
+      - /opt/grafana/dashboards:/etc/dashboards/
+      - /opt/grafana/provisioning:/etc/grafana/provisioning/
+    env:
+      TZ: "Europe/London"
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+    networks:
+      - name: ai
+    # endregion
+    # region: searxng
+  - name: searxng
+    image: searxng/searxng:2025.4.23-937eb907d
+    ports:
+      - "{{ ai_ports.searxng }}:8080"
+    volumes:
+      - /opt/searxng:/etc/searxng
+    env:
+      <<: *common_env
+      BASE_URL: "http://ai.home:{{ ai_ports.searxng }}"
+      INSTANCE_NAME: "SearxNG"
+    networks:
+      - name: ai
+    # endregion
+    # region: stable-diffusion-webui
+  - name: stable-diffusion-webui
+    image: siutin/stable-diffusion-webui-docker:cuda-12.9.0-v1.10.1-2025-05-07
+    command: bash webui.sh --share
+    runtime: nvidia
+    ports:
+      - "{{ ai_ports.stable_diffusion_webui }}:7860"
+    volumes:
+      - /opt/stable-diffusion/models:/app/stable-diffusion-webui/models
+      - /opt/stable-diffusion/outputs:/app/stable-diffusion-webui/outputs
+    device_requests: "{{ gpu_passthrough }}"
+    networks:
+      - name: ai
+    env:
+      <<: *common_env
+    # endregion

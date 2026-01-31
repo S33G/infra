@@ -1,0 +1,7 @@
+---
+- name: Deploy Wireguard to Arial pi
+  hosts:
+    - arial
+  roles:
+    - role: wireguard
+  become: true

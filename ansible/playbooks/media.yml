@@ -1,139 +1,27 @@
 ---
 
-state: started
-
-paths:
-  config: /etc/media-server
-  media: /mnt/media
-  music: /mnt/media/music
-  downloads: /mnt/downloads
-
-ports:
-  deemix: 6595
-  filebrowser: 8080
-  plex: 32400
-  airsonic: 4040
-  prowlarr: 9696
-  sonarr: 8989
-  radarr: 7878
-  sabnzbd: 8080
-  qbittorrent:
-    ui: 8080
-    dl: 6881
-
-common_env: &common_env
-  TZ: Europe/London
-  PUID: "1000"
-  PGID: "1000"
-
-containers:
-
-  - name: deemix
-    image: finniedj/deemix:latest
-    state: started
-    detach: true
-    volumes:
-      - "{{ paths.config }}/deemix:/config"
-      - "{{ paths.downloads }}/deemix:/download"
-    env:
-      PUID: "1000"
-      PGID: "1000"
-      DEEMIX_SINGLE_USER: "true"
-    ports:
-      - "{{ ports.deemix }}:6595"
-
-  - name: plex
-    image: linuxserver/plex
-    state: started
-    detach: true
-    ports:
-      - "{{ ports.plex }}:32400"
-    volumes:
-      - "{{ paths.config }}/plex:/config"
-      - "{{ paths.downloads }}/plex:/download"
-    env:
-      PLEX_CLAIM: claim-K7ZZ6x-rxsuDxNVYG
-      PLEX_UID: "1000"
-      PLEX_GID: "1000"
-
-  - name: prowlarr
-    image: lscr.io/linuxserver/prowlarr:latest
-    ports: "{{ ports.prowlarr }}:9696"
-    env: "{{ common_env }}"
-    state: "{{ state }}"
-    volumes:
-      - "{{ paths.config }}/prowlarr:/config"
-      - "{{ paths.downloads }}/prowlarr:/download"
-
-  - name: sonarr
-    image: lscr.io/linuxserver/sonarr:latest
-    ports: "{{ ports.sonarr }}:8989"
-    state: "{{ state }}"
-    env: "{{ common_env }}"
-    volumes:
-      - "{{ paths.config }}/sonarr:/config"
-      - "{{ paths.downloads }}/sonarr:/download"
-
-  - name: radarr
-    image: lscr.io/linuxserver/radarr:latest
-    ports: "{{ ports.radarr }}:7878"
-    state: "{{ state }}"
-    env: "{{ common_env }}"
-    volumes:
-      - "{{ paths.config }}/radarr:/config"
-      - "{{ paths.downloads }}/radarr:/download"
-
-  # - name: sabnzbd
-  #   image: lscr.io/linuxserver/sabnzbd:latest
-  #   ports:
-  #     - "{{ ports.sabnzbd }}:8080"
-  #   state: "{{ state }}"
-  #   env: "{{ common_env }}"
-  #   volumes:
-  #     - "{{ paths.config }}/sabnzbd:/config"
-  #     - "{{ paths.downloads }}/sabnzbd:/download"
-
-  # - name: qbittorrent
-  #   image: hotio/qbittorrent:latest
-  #   ports:
-  #     - "{{ ports.qbittorrent.ui }}:{{ ports.qbittorrent.ui }}"
-  #     - "{{ ports.qbittorrent.dl }}:{{ ports.qbittorrent.dl }}"
-  #     - "{{ ports.qbittorrent.dl }}:{{ ports.qbittorrent.dl }}/udp"
-  #   state: "{{ state }}"
-  #   env:
-  #     <<: *common_env
-  #     UMASK: '002'
-  #     WEBUI_PORT: "{{ ports.qbittorrent.ui }}"
-  #   capabilities:
-  #     - NET_ADMIN
-  #   sysctls:
-  #     net.ipv4.conf.all.src_valid_mark: 1
-  #   volumes:
-  #     - "{{ paths.config }}/qbittorrent:/config"
-  #     - "{{ paths.downloads }}/qbittorrent:/download"
-
-  # - name: airsonic
-  #   image: airsonic/airsonic
-  #   state: started
-  #   detach: true
-  #   ports:
-  #     - "{{ ports.airsonic }}:4040"
-  #   volumes:
-  #     - "{{ paths.config }}/airsonic:/config"
-  #     - "{{ paths.media }}/airsonic:/download"
-  #   env:
-  #     PUID: "1000"
-  #     PGID: "1000"
-
-  # - name: filebrowser
-  #   image: hurlenko/filebrowser
-  #   state: started
-  #   detach: true
-  #   user: 1000:1000
-  #   ports:
-  #     - "{{ ports.filebrowser }}:8080"
-  #   volumes:
-  #     - "{{ paths.config }}/filebrowser:/config"
-  #     - "{{ paths.downloads }}/filebrowser:/download"
-  #   env:
-  #     FB_BASEURL: /filebrowser
+- name: Deploy media stack
+  hosts: c3po
+  become: true
+  module_defaults:
+    community.docker.docker_container:
+      restart_policy: unless-stopped
+      state: started
+      comparisons:
+        "*": strict
+        env: allow_more_present
+  handlers:
+    - name: Prune Docker images
+      community.docker.docker_prune:
+        images: true
+        images_filters:
+          dangling: false
+  roles:
+    - role: geerlingguy.docker
+      vars:
+        docker_users:
+          "{{ ansible_user }}"
+    - role: containers
+    # TODO: Add step to copy:
+    # /etc/media-server/deemix/login.json (DEEMIX_ARL)
+    # /etc/media-server/deemix/config.json (DEEMIX_CONFIG)

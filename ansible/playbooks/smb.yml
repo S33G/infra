@@ -1,8 +1,0 @@
----
-
-- name: SMB For Media
-  hosts: media
-  become: true
-  roles:
-    - role: vladgh.samba.server
-      tags: samba

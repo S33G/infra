@@ -1,0 +1,9 @@
+---
+- hosts: all
+  vars:
+    zsh_antigen_bundles_extras:
+      - nvm
+      - joel-porquet/zsh-dircolors-solarized
+    zsh_autosuggestions_bind_key: "^U"
+  roles:
+    - viasite-ansible.zsh

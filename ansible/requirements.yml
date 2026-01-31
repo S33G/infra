@@ -1,11 +1,10 @@
+# TODO: Fix the version of the roles
+# Add renovate bot github action
 ---
 
 roles:
   - name: geerlingguy.docker
-    # Use these if dependency management is added, e.g. renovate.
-    # version: 7.4.5
-
 collections:
   - name: vladgh.samba
-    # Use these if dependency management is added, e.g. renovate.
-    # version: 3.4.0
+  - name: community.docker
+  - name: community.general

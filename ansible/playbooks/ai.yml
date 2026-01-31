@@ -1,0 +1,195 @@
+---
+- name: Deploy AI stack
+  hosts: gpu
+  vars:
+    common_env: &common_env
+      TZ: Europe/London
+      PUID: "1000"
+      PGID: "1000"
+    aiports:
+      node_exporter: 5050
+      dcgm_exporter: 5051
+      ollama_webui: 5000
+      ollama: 5001
+      piper: 5002
+      whisper: 5003
+      prometheus: 5005
+    gpu_passthrough:
+      - driver: nvidia
+        count: -1
+        capabilities:
+          - gpu
+          - utility
+          - compute
+    install_container_toolkit: true
+    containers:
+      # region whisper
+      - name: whisper
+        image: lscr.io/linuxserver/faster-whisper:gpu-v2.4.0-ls69
+        env:
+          # https://docs.linuxserver.io/images/docker-faster-whisper/
+          <<: *common_env
+          WHISPER_BEAM: "3"
+          WHISPER_LANG: en
+          WHISPER_MODEL: medium-int8
+          # LOG_LEVEL: DEBUG
+        volumes:
+          - "/opt/whisper:/config"
+        ports:
+          - "{{ aiports.whisper }}:5000"
+        # restart: unless-stopped
+        device_requests: "{{ gpu_passthrough }}"
+      # endregion
+      # region piper
+      - name: piper
+        image: slackr31337/wyoming-piper-gpu:v2025.02.2
+        env:
+          # https://github.com/slackr31337/wyoming-piper-gpu
+          # https://github.com/rhasspy/wyoming-piper
+          <<: *common_env
+          PIPER_PROCS: "4"
+          PIPER_VOICE: en_GB-aru-medium
+        volumes:
+          - /opt/piper:/data
+        ports:
+          - "{{ aiports.piper }}:10200"
+        device_requests: "{{ gpu_passthrough }}"
+      # endregion
+      # region ollama
+      - name: ollama
+        image: docker.io/ollama/ollama:latest
+        env:
+          <<: *common_env
+          OLLAMA_KEEP_ALIVE: 24h
+        ports:
+          - "{{ aiports.ollama }}:11434"
+        volumes:
+          - "/opt/ollama:/root/.cache/ollama"
+        # restart: unless-stopped
+        device_requests: "{{ gpu_passthrough }}"
+      # endregion
+      # region ollama-webui
+      - name: ollama-webui
+        image: ghcr.io/open-webui/open-webui:main
+        env:
+          # https://docs.openwebui.com/getting-started/env-configuration#default_models
+          <<: *common_env
+          OLLAMA_BASE_URLS: "http://host.docker.internal:{{ aiports.ollama }}"
+          ENV: dev
+          WEBUI_AUTH: "False"
+          WEBUI_NAME: Ollama WebUI
+          WEBUI_URL: http://ai.s33g.uk:8080
+          WEBUI_SECRET_KEY: t0p-s3cr3t
+        ports:
+          - "{{ aiports.ollama_webui }}:8080"
+        volumes:
+          - /opt/ollama-webui:/app/backend/data
+        # restart: unless-stopped
+        etc_hosts:
+          host.docker.internal: host-gateway
+
+      - name: dcgm-exporter
+        image: nvcr.io/nvidia/k8s/dcgm-exporter:2.4.6-2.6.10-ubuntu20.04
+        ports:
+          - "{{ aiports.dcgm_exporter }}:9400"
+        env:
+          DCGM_EXPORTER_NO_HOSTNAME: "true"
+        capabilities:
+          - SYS_ADMIN
+        device_requests: "{{ gpu_passthrough }}"
+
+      - name: node-exporter
+        image: quay.io/prometheus/node-exporter:latest
+        volumes:
+          - /proc:/host/proc:ro
+          - /sys:/host/sys:ro
+          - /:/rootfs:ro
+          - /:/host:ro,rslave
+        command:
+          - '--path.rootfs=/host'
+          - '--path.procfs=/host/proc'
+          - '--path.sysfs=/host/sys'
+          - --collector.filesystem.ignored-mount-points
+          - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+        ports:
+          - "{{ aiports.node_exporter }}:9100"
+
+      - name: prometheus
+        image: prom/prometheus:v3.3.0
+        command:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus'
+          - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+          - '--web.console.templates=/usr/share/prometheus/consoles'
+        ports:
+          - "{{ aiports.prometheus }}:9090"
+
+
+      # endregion
+  become: true
+  module_defaults:
+    community.docker.docker_container:
+      become: false
+      restart_policy: unless-stopped
+      state: started
+      comparisons:
+        "*": strict
+        env: allow_more_present
+  handlers:
+    - name: Prune Docker images
+      community.docker.docker_prune:
+        images: true
+        images_filters:
+          dangling: false
+  roles:
+    - geerlingguy.docker
+    - nvidia_drivers
+  tasks:
+
+    - name: Check for NVIDIA driver
+      ansible.builtin.command: nvidia-smi
+      register: nvidia_driver
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Check for NVIDIA GPU support
+      ansible.builtin.assert:
+        that:
+          - nvidia_driver.rc == 0
+        msg: >-
+          NVIDIA driver not found or GPU not supported.
+          Please check your GPU and driver installation.
+          https://docs.nvidia.com/cuda/cuda-installation-guide-linux/#driver-installation
+          https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+    # TODO: Do this only on first run?
+    # - name: Restart Docker service
+    #   ansible.builtin.systemd:
+    #     name: docker
+    #     state: restarted
+    #   when: nvidia_driver.rc == 0
+
+    # - name: Create Docker networks
+    #   community.docker.docker_network:
+    #     name: "{{ item.name }}"
+    #     state: present
+    #   loop: "{{ containers | selectattr('networks', 'defined') | map(attribute='networks') | flatten | unique }}"
+    #   loop_control:
+    #     label: "{{ item.name }}"
+
+    - name: Deploy Docker containers
+      community.docker.docker_container: "{{ item }}"
+      loop: "{{ containers }}"
+      loop_control:
+        label: "{{ item.name }}"
+      notify: Prune Docker images
+
+    - name: Show service urls
+      ansible.builtin.debug:
+        msg: >-
+          Service {{ item.name }} is available at
+          http://{{ ansible_host }}:{{ item.ports[0].split(':')[0] }}
+      loop: "{{ containers }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.ports is defined

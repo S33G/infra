@@ -1,0 +1,14 @@
+---
+- name: Deploy nginx
+  hosts: gpu
+  become: true
+  roles:
+    - role: nvidia_drivers
+      vars:
+        install_container_toolkit: true
+    - role: ai
+      vars:
+        ai_web_root_enabled: true
+        ai_web_page_title: "AI Toolkit!"
+    - role: geerlingguy.docker
+    - role: geerlingguy.pip
