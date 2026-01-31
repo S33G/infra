@@ -26,6 +26,8 @@ spec:
         sources:
           - ingress
           - traefik-proxy
+        extraArgs:
+          - "--traefik-disable-legacy=true"
         policy: sync
         txtOwnerId: k3s-homelab
         domainFilters:
