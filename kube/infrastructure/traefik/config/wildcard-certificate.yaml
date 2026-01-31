@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-k3s-s33g-uk
+  namespace: kube-system
+spec:
+  secretName: wildcard-k3s-s33g-uk-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.k3s.s33g.uk"
+    - "k3s.s33g.uk"
