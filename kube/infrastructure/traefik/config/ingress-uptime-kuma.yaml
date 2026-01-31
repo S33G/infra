@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: uptime-kuma
+  namespace: uptime-kuma
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: uptime.k3s.s33g.uk
+    external-dns.alpha.kubernetes.io/target: 10.10.0.240
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`uptime.k3s.s33g.uk`)
+      kind: Rule
+      services:
+        - name: uptime-kuma
+          port: 3001
+  tls:
+    secretName: wildcard-k3s-s33g-uk-tls
