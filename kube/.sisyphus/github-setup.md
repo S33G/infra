@@ -84,11 +84,18 @@ git push
 ## Step 6: Add Repository Credentials to ArgoCD
 
 ```bash
-# Create repository secret with SSH key
+# Create repository secret with SSH key (using file)
 kubectl create secret generic repo-infra-ssh \
   --from-literal=type=git \
   --from-literal=url=git@github.com:s33g/infra.git \
   --from-file=sshPrivateKey=$HOME/.ssh/argocd_github \
+  -n argocd
+
+# OR pass raw key directly (read from file):
+kubectl create secret generic repo-infra-ssh \
+  --from-literal=type=git \
+  --from-literal=url=git@github.com:s33g/infra.git \
+  --from-literal=sshPrivateKey="$(cat $HOME/.ssh/argocd_github)" \
   -n argocd
 
 # Label it so ArgoCD recognizes it
@@ -98,7 +105,7 @@ kubectl label secret repo-infra-ssh argocd.argoproj.io/secret-type=repository -n
 kubectl get secret repo-infra-ssh -n argocd
 ```
 
-**Expected output**: Should show the secret exists with 4 data fields.
+**Expected output**: Should show the secret exists with 3 data fields (type, url, sshPrivateKey).
 
 ---
 
