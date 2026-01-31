@@ -24,6 +24,7 @@ spec:
                 key: api-token
         sources:
           - ingress
+          - traefik-proxy
         policy: sync
         txtOwnerId: k3s-homelab
         domainFilters:
