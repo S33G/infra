@@ -25,6 +25,8 @@ spec:
         sources:
           - ingress
           - traefik-proxy
+        extraArgs:
+          - --log-level=debug
         policy: sync
         txtOwnerId: k3s-homelab
         domainFilters:
