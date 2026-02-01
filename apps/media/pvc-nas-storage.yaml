@@ -1,0 +1,27 @@
+# NAS Storage Configuration for Media Applications
+# This ConfigMap documents the NAS mount at /mnt/media
+# Each app can use hostPath volumes to access different subdirectories
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nas-storage-config
+  namespace: media
+  labels:
+    app.kubernetes.io/managed-by: argocd
+data:
+  description: "NAS mounted at /mnt/media on the host node"
+  location: "/mnt/media"
+  available-space: "65G"
+  apps: |
+    - radarr: /mnt/media/radarr (movies and intermediate files)
+    - sonarr: /mnt/media/sonarr (tv shows and intermediate files)
+    - plex-movies: /mnt/media/Movies (final library)
+    - plex-tv: /mnt/media/TV (final library)
+    - sabnzbd: /mnt/media/incomplete (downloads)
+    - deemix: /mnt/media/deemix (music downloads)
+    - metube: /mnt/media/metube (youtube downloads)
+    - tdarr: /mnt/media/transcoding (temp transcoding files)
+    - unpackerr: /mnt/media/completed (unpacked files)
+    - prowlarr: /mnt/media/prowlarr (indexer metadata - small)
+    - pinchflat: /mnt/media/pinchflat (youtube channel downloads)

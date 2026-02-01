@@ -57,15 +57,16 @@ spec:
                ports:
                  http:
                    port: *port
-           persistence:
-             config:
-               existingClaim: sabnzbd-config-pvc
-               globalMounts:
-                 - path: /config
-             media:
-               existingClaim: sabnzbd-media-pvc
-               globalMounts:
-                 - path: /mnt/media/sabnzbd
+            persistence:
+              config:
+                existingClaim: sabnzbd-config-pvc
+                globalMounts:
+                  - path: /config
+              media:
+                type: hostPath
+                hostPath: /mnt/media/sabnzbd
+                globalMounts:
+                  - path: /mnt/media/sabnzbd
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
       path: apps/media/sabnzbd

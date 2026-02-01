@@ -26,14 +26,15 @@ spec:
                ports:
                  http:
                    port: 9696
-           persistence:
-             config:
-               enabled: true
-               existingClaim: prowlarr-config-pvc
-             media:
-               enabled: true
-               existingClaim: prowlarr-media-pvc
-               mountPath: /mnt/media/prowlarr
+            persistence:
+              config:
+                enabled: true
+                existingClaim: prowlarr-config-pvc
+              media:
+                enabled: true
+                type: hostPath
+                hostPath: /mnt/media/prowlarr
+                mountPath: /mnt/media/prowlarr
           resources:
             requests:
               cpu: 100m

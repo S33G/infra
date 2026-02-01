@@ -32,24 +32,25 @@ spec:
                  server:
                    enabled: true
                    port: 8266
-           persistence:
-             config:
-               enabled: true
-               existingClaim: tdarr-config-pvc
-               mountPath: /app/configs
-             data:
-               enabled: true
-               existingClaim: tdarr-data-pvc
-               mountPath: /app/server
-             media:
-               enabled: true
-               existingClaim: tdarr-media-pvc
-               mountPath: /mnt/media/tdarr
-             shared:
-               enabled: true
-               type: emptyDir
-               mountPath: /temp
-               sizeLimit: 100Gi
+            persistence:
+              config:
+                enabled: true
+                existingClaim: tdarr-config-pvc
+                mountPath: /app/configs
+              data:
+                enabled: true
+                existingClaim: tdarr-data-pvc
+                mountPath: /app/server
+              media:
+                enabled: true
+                type: hostPath
+                hostPath: /mnt/media/tdarr
+                mountPath: /mnt/media/tdarr
+              shared:
+                enabled: true
+                type: emptyDir
+                mountPath: /temp
+                sizeLimit: 100Gi
           resources:
             requests:
               cpu: 200m

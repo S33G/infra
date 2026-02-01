@@ -26,14 +26,15 @@ spec:
                ports:
                  http:
                    port: 7878
-           persistence:
-             config:
-               enabled: true
-               existingClaim: radarr-config-pvc
-             media:
-               enabled: true
-               existingClaim: radarr-media-pvc
-               mountPath: /mnt/media/radarr
+            persistence:
+              config:
+                enabled: true
+                existingClaim: radarr-config-pvc
+              media:
+                enabled: true
+                type: hostPath
+                hostPath: /mnt/media/radarr
+                mountPath: /mnt/media/radarr
           resources:
             requests:
               cpu: 100m

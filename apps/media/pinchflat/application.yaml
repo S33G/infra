@@ -49,15 +49,16 @@ spec:
             ports:
               http:
                 port: 8945
-        persistence:
-          config:
-            existingClaim: pinchflat-config-pvc
-            globalMounts:
-              - path: /config
-          media:
-            existingClaim: pinchflat-media-pvc
-            globalMounts:
-              - path: /mnt/media/pinchflat
+         persistence:
+           config:
+             existingClaim: pinchflat-config-pvc
+             globalMounts:
+               - path: /config
+           media:
+             type: hostPath
+             hostPath: /mnt/media/pinchflat
+             globalMounts:
+               - path: /mnt/media/pinchflat
   destination:
     server: https://kubernetes.default.svc
     namespace: media

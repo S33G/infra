@@ -23,8 +23,8 @@ spec:
                   tag: latest
                 env:
                   TZ: Europe/London
-                  PUID: "1000"
-                  PGID: "1000"
+                  # PUID: "1000"
+                  # PGID: "1000"
                   DOWNLOAD_DIR: /downloads
                   STATE_DIR: /config
                 probes:
@@ -51,15 +51,16 @@ spec:
             ports:
               http:
                 port: 8081
-        persistence:
-          config:
-            existingClaim: metube-config-pvc
-            globalMounts:
-              - path: /config
-          media:
-            existingClaim: metube-media-pvc
-            globalMounts:
-              - path: /mnt/media/metube
+         persistence:
+           config:
+             existingClaim: metube-config-pvc
+             globalMounts:
+               - path: /config
+           media:
+             type: hostPath
+             hostPath: /mnt/media/metube
+             globalMounts:
+               - path: /mnt/media/metube
   destination:
     server: https://kubernetes.default.svc
     namespace: media
@@ -68,4 +69,4 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true
