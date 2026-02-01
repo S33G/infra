@@ -7,57 +7,56 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
-  source:
-    repoURL: https://bjw-s-labs.github.io/helm-charts
-    chart: app-template
-    targetRevision: 4.6.2
-    helm:
-      releaseName: metube
-      values: |
-        controllers:
-          metube:
-            containers:
-              app:
-                image:
-                  repository: ghcr.io/alexta69/metube
-                  tag: latest
-                env:
-                  TZ: Europe/London
-                  DOWNLOAD_DIR: /downloads
-                  STATE_DIR: /config
-                probes:
-                  liveness:
-                    enabled: true
-                  readiness:
-                    enabled: true
-                resources:
-                  requests:
-                    cpu: 10m
-                    memory: 128Mi
-                  limits:
-                    cpu: 1000m
-                    memory: 1Gi
-                 securityContext:
-                   runAsUser: 0
-                   runAsGroup: 0
-                   allowPrivilegeEscalation: true
-                   readOnlyRootFilesystem: false
-        service:
-          app:
-            controller: metube
-            ports:
-              http:
-                port: 8081
-        persistence:
-          config:
-            existingClaim: metube-config-pvc
-            globalMounts:
-              - path: /config
-          media:
-            type: hostPath
-            hostPath: /mnt/media/metube
-            globalMounts:
-              - path: /mnt/media/metube
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: 4.6.2
+      helm:
+        releaseName: metube
+        values: |
+          controllers:
+            metube:
+              containers:
+                app:
+                  image:
+                    repository: ghcr.io/alexta69/metube
+                    tag: latest
+                  command:
+                    - /bin/sh
+                    - -c
+                    - python /app/app/main.py
+                  env:
+                    TZ: Europe/London
+                    DOWNLOAD_DIR: /downloads
+                    STATE_DIR: /config
+                  probes:
+                    liveness:
+                      enabled: true
+                    readiness:
+                      enabled: true
+                  resources:
+                    requests:
+                      cpu: 10m
+                      memory: 128Mi
+                    limits:
+                      cpu: 1000m
+                      memory: 1Gi
+          service:
+            app:
+              controller: metube
+              ports:
+                http:
+                  port: 8081
+          persistence:
+            config:
+              existingClaim: metube-config-pvc
+              globalMounts:
+                - path: /config
+            media:
+              type: hostPath
+              hostPath: /mnt/media/metube
+              globalMounts:
+                - path: /mnt/media/metube
   destination:
     server: https://kubernetes.default.svc
     namespace: media
