@@ -48,6 +48,9 @@ spec:
                     add:
                       - SETGID
                       - SETUID
+            podSecurityContext:
+              fsGroup: 1000
+              fsGroupChangePolicy: OnRootMismatch
         service:
           app:
             controller: deemix
