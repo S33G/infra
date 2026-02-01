@@ -26,11 +26,11 @@ spec:
                 secretKeyRef:
                   name: plex-secrets
                   key: plex_claim
-          service:
-            main:
-              ports:
-                http:
-                  port: 32400
+           service:
+             main:
+               ports:
+                 http:
+                   port: 32400
            persistence:
              config:
                enabled: true

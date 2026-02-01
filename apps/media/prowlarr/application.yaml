@@ -21,11 +21,11 @@ spec:
             TZ: Europe/London
             PUID: "1000"
             PGID: "1000"
-          service:
-            main:
-              ports:
-                http:
-                  port: 9696
+           service:
+             main:
+               ports:
+                 http:
+                   port: 9696
            persistence:
              config:
                enabled: true

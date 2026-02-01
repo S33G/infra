@@ -51,12 +51,12 @@ spec:
                     capabilities:
                       drop:
                         - ALL
-          service:
-            app:
-              controller: sabnzbd
-              ports:
-                http:
-                  port: *port
+           service:
+             app:
+               controller: sabnzbd
+               ports:
+                 http:
+                   port: *port
            persistence:
              config:
                existingClaim: sabnzbd-config-pvc
