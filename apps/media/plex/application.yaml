@@ -31,14 +31,18 @@ spec:
               ports:
                 http:
                   port: 32400
-          persistence:
-            config:
-              enabled: true
-              existingClaim: plex-config-pvc
-            media:
-              enabled: true
-              existingClaim: media-pvc
-              mountPath: /media
+           persistence:
+             config:
+               enabled: true
+               existingClaim: plex-config-pvc
+             movies:
+               enabled: true
+               existingClaim: plex-movies-pvc
+               mountPath: /mnt/media/Movies
+             tv:
+               enabled: true
+               existingClaim: plex-tv-pvc
+               mountPath: /mnt/media/TV
           resources:
             requests:
               cpu: 500m

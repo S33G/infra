@@ -57,15 +57,15 @@ spec:
             ports:
               http:
                 port: 6595
-        persistence:
-          config:
-            existingClaim: deemix-config-pvc
-            globalMounts:
-              - path: /config
-          media:
-            existingClaim: media-pvc
-            globalMounts:
-              - path: /downloads
+         persistence:
+           config:
+             existingClaim: deemix-config-pvc
+             globalMounts:
+               - path: /config
+           media:
+             existingClaim: deemix-media-pvc
+             globalMounts:
+               - path: /downloads
   destination:
     server: https://kubernetes.default.svc
     namespace: media

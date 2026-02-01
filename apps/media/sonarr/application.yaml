@@ -26,14 +26,14 @@ spec:
               ports:
                 http:
                   port: 8989
-          persistence:
-            config:
-              enabled: true
-              existingClaim: sonarr-config-pvc
-            media:
-              enabled: true
-              existingClaim: media-pvc
-              mountPath: /data
+           persistence:
+             config:
+               enabled: true
+               existingClaim: sonarr-config-pvc
+             media:
+               enabled: true
+               existingClaim: sonarr-media-pvc
+               mountPath: /mnt/media/sonarr
           resources:
             requests:
               cpu: 100m
