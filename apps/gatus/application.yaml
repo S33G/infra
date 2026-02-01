@@ -5,91 +5,32 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://twin.github.io/helm-charts
-    chart: gatus
-    targetRevision: 1.4.5
-    helm:
-      releaseName: gatus
-      values: |
-        persistence:
-          enabled: true
-          storageClass: longhorn
-          size: 2Gi
-        resources:
-          requests:
-            cpu: 50m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
-        serviceMonitor:
-          enabled: false
-        config:
-          endpoints:
-            - name: ArgoCD
-              group: Infrastructure
-              url: https://argocd.k3s.s33g.uk
-              interval: 60s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 3000"
-
-            - name: Grafana
-              group: Monitoring
-              url: https://grafana.k3s.s33g.uk
-              interval: 60s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 2000"
-
-            - name: Prometheus
-              group: Monitoring
-              url: https://prometheus.k3s.s33g.uk
-              interval: 60s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 2000"
-
-            - name: Alertmanager
-              group: Monitoring
-              url: https://alertmanager.k3s.s33g.uk
-              interval: 60s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 2000"
-
-            - name: Longhorn
-              group: Infrastructure
-              url: https://longhorn.k3s.s33g.uk
-              interval: 60s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 2000"
-
-            - name: Uptime Kuma
-              group: Monitoring
-              url: https://uptime.k3s.s33g.uk
-              interval: 60s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 2000"
-
-            - name: Authentik SSO
-              group: Security
-              url: https://sso.k3s.s33g.uk
-              interval: 60s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 2000"
-
-            - name: Gatus (self-check)
-              group: Monitoring
-              url: https://gatus.k3s.s33g.uk
-              interval: 120s
-              conditions:
-                - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 1000"
+  sources:
+    - repoURL: https://twin.github.io/helm-charts
+      chart: gatus
+      targetRevision: 1.4.5
+      helm:
+        releaseName: gatus
+        values: |
+          persistence:
+            enabled: true
+            storageClass: longhorn
+            size: 2Gi
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          serviceMonitor:
+            enabled: false
+          configExistingConfigMap: gatus-config
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: apps/gatus
+      directory:
+        include: 'config.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: gatus
