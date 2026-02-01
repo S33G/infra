@@ -1,7 +1,0 @@
----
-- name: Deploy nginx
-  hosts: c3po
-  become: true
-  roles:
-    - role: certbot
-    - role: nginx

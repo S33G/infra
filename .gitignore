@@ -1,5 +1,0 @@
-venv
-.ansible
-.terraform
-.terraform.lock.hcl
-
