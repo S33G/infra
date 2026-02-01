@@ -25,6 +25,7 @@ spec:
               memory: 512Mi
           serviceMonitor:
             enabled: false
+          externalConfigMap: gatus-config
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
       path: apps/gatus
