@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: git@github.com:s33g/infra.git
     targetRevision: HEAD
-    path: kube
+    path: .
     directory:
       recurse: true
       include: '{infrastructure/**/application.yaml,apps/**/application.yaml}'

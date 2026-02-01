@@ -4,17 +4,14 @@ metadata:
   name: authentik-blueprints
   namespace: authentik
 data:
-  # =============================================================================
-  # GROUPS BLUEPRINT
-  # =============================================================================
-  groups.yaml: |
+  infrastructure.yaml: |
     version: 1
     metadata:
-      name: Infrastructure Groups
+      name: Infrastructure SSO
     entries:
+      # Groups
       - model: authentik_core.group
         id: group-admins
-        state: present
         identifiers:
           name: admins
         attrs:
@@ -22,314 +19,150 @@ data:
 
       - model: authentik_core.group
         id: group-users
-        state: present
         identifiers:
           name: users
         attrs:
           is_superuser: false
 
-      - model: authentik_core.group
-        id: group-grafana-admins
-        state: present
-        identifiers:
-          name: grafana-admins
-        attrs:
-          is_superuser: false
-          parent: !KeyOf group-admins
-
-      - model: authentik_core.group
-        id: group-argocd-admins
-        state: present
-        identifiers:
-          name: argocd-admins
-        attrs:
-          is_superuser: false
-          parent: !KeyOf group-admins
-
-  # =============================================================================
-  # OAUTH2/OIDC PROVIDERS BLUEPRINT
-  # =============================================================================
-  providers.yaml: |
-    version: 1
-    metadata:
-      name: Infrastructure OAuth2 Providers
-    context:
-      base_domain: k3s.s33g.uk
-      authentik_host: sso.k3s.s33g.uk
-    entries:
-      # -------------------------------------------------------------------------
-      # Certificate for signing
-      # -------------------------------------------------------------------------
-      - model: authentik_crypto.certificatekeypair
-        id: cert-self-signed
-        state: present
-        identifiers:
-          name: Self-signed Certificate
-        attrs:
-          certificate_data: ""
-          key_data: ""
-
-      # -------------------------------------------------------------------------
-      # Scope Mappings (standard OIDC scopes)
-      # -------------------------------------------------------------------------
-      - model: authentik_providers_oauth2.scopemapping
-        id: scope-openid
-        state: present
-        identifiers:
-          managed: goauthentik.io/providers/oauth2/scope-openid
-        attrs:
-          name: "OpenID Connect"
-          scope_name: openid
-          expression: |
-            return {}
-
-      - model: authentik_providers_oauth2.scopemapping
-        id: scope-email
-        state: present
-        identifiers:
-          managed: goauthentik.io/providers/oauth2/scope-email
-        attrs:
-          name: "Email"
-          scope_name: email
-          expression: |
-            return {
-              "email": request.user.email,
-              "email_verified": True,
-            }
-
-      - model: authentik_providers_oauth2.scopemapping
-        id: scope-profile
-        state: present
-        identifiers:
-          managed: goauthentik.io/providers/oauth2/scope-profile
-        attrs:
-          name: "Profile"
-          scope_name: profile
-          expression: |
-            return {
-              "name": request.user.name,
-              "given_name": request.user.name,
-              "preferred_username": request.user.username,
-              "nickname": request.user.username,
-              "groups": [group.name for group in request.user.ak_groups.all()],
-            }
-
-      # -------------------------------------------------------------------------
-      # ArgoCD OAuth2 Provider
-      # -------------------------------------------------------------------------
-      - model: authentik_providers_oauth2.oauth2provider
-        id: provider-argocd
-        state: present
+      # OAuth2 Provider - ArgoCD
+      - id: provider-argocd
+        model: authentik_providers_oauth2.oauth2provider
         identifiers:
           name: ArgoCD
         attrs:
-          authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
           client_type: confidential
           client_id: argocd
-          client_secret: !Env [ARGOCD_CLIENT_SECRET, "changeme-argocd-secret"]
-          redirect_uris: |
-            https://argocd.k3s.s33g.uk/auth/callback
-            https://argocd.k3s.s33g.uk/api/dex/callback
-          signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
-          property_mappings:
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+          client_secret: "eKBc5HB6qpY3TKkWjkZbxp1/vBJewyArTxzlPxtduR8="
+          redirect_uris:
+            - url: https://argocd.k3s.s33g.uk/auth/callback
+              matching_mode: strict
+            - url: https://argocd.k3s.s33g.uk/api/dex/callback
+              matching_mode: strict
           sub_mode: hashed_user_id
           include_claims_in_id_token: true
           access_code_validity: minutes=1
           access_token_validity: minutes=5
           refresh_token_validity: days=30
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
 
-      # -------------------------------------------------------------------------
-      # Grafana OAuth2 Provider
-      # -------------------------------------------------------------------------
-      - model: authentik_providers_oauth2.oauth2provider
-        id: provider-grafana
-        state: present
+      # OAuth2 Provider - Grafana
+      - id: provider-grafana
+        model: authentik_providers_oauth2.oauth2provider
         identifiers:
           name: Grafana
         attrs:
-          authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
           client_type: confidential
           client_id: grafana
-          client_secret: !Env [GRAFANA_CLIENT_SECRET, "changeme-grafana-secret"]
-          redirect_uris: |
-            https://grafana.k3s.s33g.uk/login/generic_oauth
-          signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
-          property_mappings:
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+          client_secret: "aZlqiS6QNH5A8Jq0cC2K3dLZTXB6WNCXRInqTCE3/rc="
+          redirect_uris:
+            - url: https://grafana.k3s.s33g.uk/login/generic_oauth
+              matching_mode: strict
           sub_mode: hashed_user_id
           include_claims_in_id_token: true
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
 
-      # -------------------------------------------------------------------------
-      # Forward Auth Provider (for Traefik - Prometheus, Alertmanager, Longhorn, etc.)
-      # -------------------------------------------------------------------------
-      - model: authentik_providers_proxy.proxyprovider
-        id: provider-forward-auth
-        state: present
+      # Proxy Provider - Forward Auth
+      - id: provider-forward-auth
+        model: authentik_providers_proxy.proxyprovider
         identifiers:
           name: Forward Auth (Traefik)
         attrs:
-          authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
           mode: forward_single
           external_host: https://sso.k3s.s33g.uk
-          access_token_validity: minutes=5
-          refresh_token_validity: days=30
 
-  # =============================================================================
-  # APPLICATIONS BLUEPRINT
-  # =============================================================================
-  applications.yaml: |
-    version: 1
-    metadata:
-      name: Infrastructure Applications
-    entries:
-      # -------------------------------------------------------------------------
-      # ArgoCD Application
-      # -------------------------------------------------------------------------
-      - model: authentik_core.application
-        id: app-argocd
-        state: present
+      # Application - ArgoCD
+      - id: app-argocd
+        model: authentik_core.application
         identifiers:
           slug: argocd
         attrs:
           name: ArgoCD
-          provider: !Find [authentik_providers_oauth2.oauth2provider, [name, ArgoCD]]
+          provider: !KeyOf provider-argocd
           policy_engine_mode: any
           meta_launch_url: https://argocd.k3s.s33g.uk
-          meta_icon: https://argo-cd.readthedocs.io/en/stable/assets/logo.png
 
-      # -------------------------------------------------------------------------
-      # Grafana Application
-      # -------------------------------------------------------------------------
-      - model: authentik_core.application
-        id: app-grafana
-        state: present
+      # Application - Grafana
+      - id: app-grafana
+        model: authentik_core.application
         identifiers:
           slug: grafana
         attrs:
           name: Grafana
-          provider: !Find [authentik_providers_oauth2.oauth2provider, [name, Grafana]]
+          provider: !KeyOf provider-grafana
           policy_engine_mode: any
           meta_launch_url: https://grafana.k3s.s33g.uk
-          meta_icon: https://grafana.com/static/img/menu/grafana2.svg
 
-      # -------------------------------------------------------------------------
-      # Prometheus Application (Forward Auth)
-      # -------------------------------------------------------------------------
-      - model: authentik_core.application
-        id: app-prometheus
-        state: present
+      # Application - Prometheus
+      - id: app-prometheus
+        model: authentik_core.application
         identifiers:
           slug: prometheus
         attrs:
           name: Prometheus
-          provider: !Find [authentik_providers_proxy.proxyprovider, [name, "Forward Auth (Traefik)"]]
+          provider: !KeyOf provider-forward-auth
           policy_engine_mode: any
           meta_launch_url: https://prometheus.k3s.s33g.uk
-          meta_icon: https://prometheus.io/assets/favicons/android-chrome-192x192.png
 
-      # -------------------------------------------------------------------------
-      # Alertmanager Application (Forward Auth)
-      # -------------------------------------------------------------------------
-      - model: authentik_core.application
-        id: app-alertmanager
-        state: present
+      # Application - Alertmanager
+      - id: app-alertmanager
+        model: authentik_core.application
         identifiers:
           slug: alertmanager
         attrs:
           name: Alertmanager
-          provider: !Find [authentik_providers_proxy.proxyprovider, [name, "Forward Auth (Traefik)"]]
+          provider: !KeyOf provider-forward-auth
           policy_engine_mode: any
           meta_launch_url: https://alertmanager.k3s.s33g.uk
-          meta_icon: https://prometheus.io/assets/favicons/android-chrome-192x192.png
 
-      # -------------------------------------------------------------------------
-      # Longhorn Application (Forward Auth)
-      # -------------------------------------------------------------------------
-      - model: authentik_core.application
-        id: app-longhorn
-        state: present
+      # Application - Longhorn
+      - id: app-longhorn
+        model: authentik_core.application
         identifiers:
           slug: longhorn
         attrs:
           name: Longhorn
-          provider: !Find [authentik_providers_proxy.proxyprovider, [name, "Forward Auth (Traefik)"]]
+          provider: !KeyOf provider-forward-auth
           policy_engine_mode: any
           meta_launch_url: https://longhorn.k3s.s33g.uk
-          meta_icon: https://longhorn.io/img/logos/longhorn-icon-white.png
 
-      # -------------------------------------------------------------------------
-      # Gatus Application (Forward Auth)
-      # -------------------------------------------------------------------------
-      - model: authentik_core.application
-        id: app-gatus
-        state: present
+      # Application - Gatus
+      - id: app-gatus
+        model: authentik_core.application
         identifiers:
           slug: gatus
         attrs:
           name: Gatus
-          provider: !Find [authentik_providers_proxy.proxyprovider, [name, "Forward Auth (Traefik)"]]
+          provider: !KeyOf provider-forward-auth
           policy_engine_mode: any
           meta_launch_url: https://gatus.k3s.s33g.uk
-          meta_icon: https://gatus.io/img/logo-with-dark-text.png
 
-      # -------------------------------------------------------------------------
-      # Uptime Kuma Application (Forward Auth)
-      # -------------------------------------------------------------------------
-      - model: authentik_core.application
-        id: app-uptime-kuma
-        state: present
+      # Application - Uptime Kuma
+      - id: app-uptime-kuma
+        model: authentik_core.application
         identifiers:
           slug: uptime-kuma
         attrs:
           name: Uptime Kuma
-          provider: !Find [authentik_providers_proxy.proxyprovider, [name, "Forward Auth (Traefik)"]]
+          provider: !KeyOf provider-forward-auth
           policy_engine_mode: any
           meta_launch_url: https://uptime.k3s.s33g.uk
-          meta_icon: https://uptime.kuma.pet/img/icon.svg
 
-  # =============================================================================
-  # OUTPOST BLUEPRINT (for Forward Auth)
-  # =============================================================================
-  outpost.yaml: |
-    version: 1
-    metadata:
-      name: Embedded Outpost Configuration
-    entries:
+      # Embedded Outpost
       - model: authentik_outposts.outpost
-        id: outpost-embedded
-        state: present
         identifiers:
-          name: authentik Embedded Outpost
+          managed: goauthentik.io/outposts/embedded
         attrs:
-          type: proxy
           providers:
-            - !Find [authentik_providers_proxy.proxyprovider, [name, "Forward Auth (Traefik)"]]
-          config:
-            authentik_host: https://sso.k3s.s33g.uk/
-            authentik_host_insecure: false
-            authentik_host_browser: ""
-            log_level: info
-            object_naming_template: "ak-outpost-%(name)s"
-            docker_network: null
-            docker_map_ports: true
-            docker_labels: null
-            container_image: null
-            kubernetes_replicas: 1
-            kubernetes_namespace: authentik
-            kubernetes_ingress_annotations: {}
-            kubernetes_ingress_secret_name: wildcard-k3s-s33g-uk-tls
-            kubernetes_service_type: ClusterIP
-            kubernetes_disabled_components: []
-            kubernetes_image_pull_secrets: []
-          service_connection: null
+            - !KeyOf provider-forward-auth

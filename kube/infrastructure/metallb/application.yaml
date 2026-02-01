@@ -15,7 +15,7 @@ spec:
         releaseName: metallb
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
-      path: kube/infrastructure/metallb
+      path: infrastructure/metallb
       directory:
         include: 'config.yaml'
   destination:

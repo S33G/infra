@@ -99,7 +99,7 @@ spec:
                 memory: 512Mi
   - repoURL: git@github.com:s33g/infra.git
     targetRevision: HEAD
-    path: kube/apps/authentik
+    path: apps/authentik
     directory:
       include: '{blueprints.yaml,external-secret.yaml}'
 

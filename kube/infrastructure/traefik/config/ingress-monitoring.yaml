@@ -9,13 +9,13 @@ metadata:
     external-dns.alpha.kubernetes.io/target: 10.10.0.240
 spec:
   entryPoints:
-    - websecure
+  - websecure
   routes:
-    - match: Host(`grafana.k3s.s33g.uk`)
-      kind: Rule
-      services:
-        - name: monitoring-grafana
-          port: 80
+  - match: Host(`grafana.k3s.s33g.uk`)
+    kind: Rule
+    services:
+    - name: monitoring-grafana
+      port: 80
   tls:
     secretName: wildcard-k3s-s33g-uk-tls
 ---
@@ -29,16 +29,13 @@ metadata:
     external-dns.alpha.kubernetes.io/target: 10.10.0.240
 spec:
   entryPoints:
-    - websecure
+  - websecure
   routes:
-    - match: Host(`prometheus.k3s.s33g.uk`)
-      kind: Rule
-      middlewares:
-        - name: authentik
-          namespace: kube-system
-      services:
-        - name: monitoring-kube-prometheus-prometheus
-          port: 9090
+  - match: Host(`prometheus.k3s.s33g.uk`)
+    kind: Rule
+    services:
+    - name: monitoring-kube-prometheus-prometheus
+      port: 9090
   tls:
     secretName: wildcard-k3s-s33g-uk-tls
 ---
@@ -52,15 +49,12 @@ metadata:
     external-dns.alpha.kubernetes.io/target: 10.10.0.240
 spec:
   entryPoints:
-    - websecure
+  - websecure
   routes:
-    - match: Host(`alertmanager.k3s.s33g.uk`)
-      kind: Rule
-      middlewares:
-        - name: authentik
-          namespace: kube-system
-      services:
-        - name: monitoring-kube-prometheus-alertmanager
-          port: 9093
+  - match: Host(`alertmanager.k3s.s33g.uk`)
+    kind: Rule
+    services:
+    - name: monitoring-kube-prometheus-alertmanager
+      port: 9093
   tls:
     secretName: wildcard-k3s-s33g-uk-tls

@@ -18,7 +18,7 @@ spec:
             enabled: true
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
-      path: kube/infrastructure/cert-manager/issuers
+      path: infrastructure/cert-manager/issuers
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager

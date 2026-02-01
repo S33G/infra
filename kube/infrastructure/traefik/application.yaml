@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: git@github.com:s33g/infra.git
     targetRevision: HEAD
-    path: kube/infrastructure/traefik/config
+    path: infrastructure/traefik/config
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

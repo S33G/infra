@@ -58,7 +58,7 @@ spec:
                         storage: 1Gi
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
-      path: kube/infrastructure/monitoring
+      path: infrastructure/monitoring
       directory:
         include: 'external-secret.yaml'
   destination:

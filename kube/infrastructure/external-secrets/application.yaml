@@ -17,7 +17,7 @@ spec:
           installCRDs: true
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
-      path: kube/infrastructure/external-secrets
+      path: infrastructure/external-secrets
       directory:
         include: 'secret-store.yaml'
   destination:

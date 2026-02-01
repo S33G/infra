@@ -8,15 +8,12 @@ metadata:
     external-dns.alpha.kubernetes.io/target: 10.10.0.240
 spec:
   entryPoints:
-    - websecure
+  - websecure
   routes:
-    - match: Host(`gatus.k3s.s33g.uk`)
-      kind: Rule
-      middlewares:
-        - name: authentik
-          namespace: kube-system
-      services:
-        - name: gatus
-          port: 80
+  - match: Host(`gatus.k3s.s33g.uk`)
+    kind: Rule
+    services:
+    - name: gatus
+      port: 80
   tls:
     secretName: wildcard-k3s-s33g-uk-tls
