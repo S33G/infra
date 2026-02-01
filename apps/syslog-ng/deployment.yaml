@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syslog-ng
+  namespace: syslog-ng
+  labels:
+    app.kubernetes.io/name: syslog-ng
+    app.kubernetes.io/managed-by: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: syslog-ng
+  template:
+    metadata:
+      labels:
+        app: syslog-ng
+        app.kubernetes.io/name: syslog-ng
+        app.kubernetes.io/managed-by: argocd
+    spec:
+      serviceAccountName: syslog-ng
+      containers:
+      - name: syslog-ng
+        image: lscr.io/linuxserver/syslog-ng:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: syslog-udp
+          containerPort: 514
+          protocol: UDP
+        - name: syslog-tcp
+          containerPort: 601
+          protocol: TCP
+        - name: syslog-tls
+          containerPort: 6514
+          protocol: TCP
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "UTC"
+        volumeMounts:
+        - name: logs
+          mountPath: /var/log/syslog-ng
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          tcpSocket:
+            port: syslog-tcp
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: syslog-tcp
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: syslog-ng-logs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: syslog-ng-logs
+  namespace: syslog-ng
+  labels:
+    app.kubernetes.io/name: syslog-ng
+    app.kubernetes.io/managed-by: argocd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: syslog-ng
+  namespace: syslog-ng
+  labels:
+    app.kubernetes.io/name: syslog-ng
+    app.kubernetes.io/managed-by: argocd

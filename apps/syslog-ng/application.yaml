@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: syslog-ng
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  sources:
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: apps/syslog-ng
+      directory:
+        include: '{deployment.yaml,service.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: syslog-ng
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
