@@ -24,7 +24,7 @@ spec:
              serverIP: 0.0.0.0
              serverPort: "8266"
              webUIPort: "8265"
-           service:
+          service:
              main:
                ports:
                  http:
@@ -32,7 +32,7 @@ spec:
                  server:
                    enabled: true
                    port: 8266
-           persistence:
+          persistence:
               config:
                 enabled: true
                 existingClaim: tdarr-config-pvc

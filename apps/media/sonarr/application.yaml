@@ -17,16 +17,16 @@ spec:
           image:
             repository: lscr.io/linuxserver/sonarr
             tag: 4.0.14
-           env:
+          env:
              TZ: Europe/London
              PUID: "1000"
              PGID: "1000"
-           service:
+          service:
              main:
                ports:
                  http:
                    port: 8989
-           persistence:
+          persistence:
               config:
                 enabled: true
                 existingClaim: sonarr-config-pvc
