@@ -12,6 +12,9 @@ spec:
   routes:
     - match: Host(`uptime.k3s.s33g.uk`)
       kind: Rule
+      middlewares:
+        - name: authentik
+          namespace: kube-system
       services:
         - name: uptime-kuma
           port: 3001

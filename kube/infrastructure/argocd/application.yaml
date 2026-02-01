@@ -1,0 +1,113 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-cd
+      targetRevision: 7.7.15
+      helm:
+        releaseName: argocd
+        values: |
+          configs:
+            cm:
+              url: https://argocd.k3s.s33g.uk
+              oidc.config: |
+                name: Authentik
+                issuer: https://sso.k3s.s33g.uk/application/o/argocd/
+                clientID: argocd
+                clientSecret: $oidc.authentik.clientSecret
+                requestedScopes:
+                  - openid
+                  - profile
+                  - email
+            rbac:
+              policy.csv: |
+                g, argocd-admins, role:admin
+                g, admins, role:admin
+              policy.default: role:readonly
+            params:
+              server.insecure: true
+            secret:
+              extra:
+                oidc.authentik.clientSecret: $ARGOCD_OIDC_SECRET
+          
+          server:
+            replicas: 1
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+            extraEnvFrom:
+              - secretRef:
+                  name: argocd-oidc-secret
+          
+          controller:
+            replicas: 1
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 1Gi
+          
+          repoServer:
+            replicas: 1
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+          
+          applicationSet:
+            replicas: 1
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+          
+          redis:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: kube/infrastructure/argocd
+      directory:
+        include: 'external-secret.yaml'
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

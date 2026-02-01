@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 67.4.0
+      helm:
+        values: |
+          prometheus:
+            prometheusSpec:
+              retention: 7d
+              storageSpec:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: longhorn
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 10Gi
+          grafana:
+            persistence:
+              enabled: true
+              storageClassName: longhorn
+              size: 5Gi
+            adminPassword: "admin"
+            envFromSecrets:
+              - name: grafana-oauth-secret
+            grafana.ini:
+              server:
+                root_url: https://grafana.k3s.s33g.uk
+              auth:
+                disable_login_form: false
+              auth.generic_oauth:
+                enabled: true
+                name: Authentik
+                allow_sign_up: true
+                client_id: grafana
+                client_secret: ${GRAFANA_CLIENT_SECRET}
+                scopes: openid profile email
+                auth_url: https://sso.k3s.s33g.uk/application/o/authorize/
+                token_url: https://sso.k3s.s33g.uk/application/o/token/
+                api_url: https://sso.k3s.s33g.uk/application/o/userinfo/
+                role_attribute_path: contains(groups[*], 'grafana-admins') && 'Admin' || contains(groups[*], 'admins') && 'Admin' || 'Viewer'
+          alertmanager:
+            alertmanagerSpec:
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    storageClassName: longhorn
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 1Gi
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: kube/infrastructure/monitoring
+      directory:
+        include: 'external-secret.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
