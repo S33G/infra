@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unpackerr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: unpackerr
+    app.kubernetes.io/managed-by: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unpackerr
+  template:
+    metadata:
+      labels:
+        app: unpackerr
+        app.kubernetes.io/name: unpackerr
+        app.kubernetes.io/managed-by: argocd
+    spec:
+      serviceAccountName: unpackerr
+      containers:
+      - name: unpackerr
+        image: ghcr.io/unpackerr/unpackerr:0.14.5
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: Europe/London
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: media
+          mountPath: /data
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: unpackerr-config-pvc
+      - name: media
+        persistentVolumeClaim:
+          claimName: media-pvc
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: unpackerr
+  namespace: media
+  labels:
+    app.kubernetes.io/name: unpackerr
+    app.kubernetes.io/managed-by: argocd
