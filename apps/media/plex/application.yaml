@@ -27,11 +27,11 @@ spec:
                   name: plex-secrets
                   key: plex_claim
           service:
-             main:
-               ports:
-                 http:
-                   port: 32400
-            persistence:
+            main:
+              ports:
+                http:
+                  port: 32400
+          persistence:
               config:
                 enabled: true
                 existingClaim: plex-config-pvc

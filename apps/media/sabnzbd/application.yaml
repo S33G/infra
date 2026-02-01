@@ -52,12 +52,12 @@ spec:
                       drop:
                         - ALL
           service:
-             app:
-               controller: sabnzbd
-               ports:
-                 http:
-                   port: *port
-            persistence:
+            app:
+              controller: sabnzbd
+              ports:
+                http:
+                  port: *port
+          persistence:
               config:
                 existingClaim: sabnzbd-config-pvc
                 globalMounts:
