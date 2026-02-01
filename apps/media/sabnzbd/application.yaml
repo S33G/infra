@@ -24,12 +24,7 @@ spec:
                   env:
                     TZ: Europe/London
                     SABNZBD__PORT: &port 80
-                    SABNZBD__HOST_WHITELIST_ENTRIES: >-
-                      sabnzbd,
-                      sabnzbd.media,
-                      sabnzbd.media.svc,
-                      sabnzbd.media.svc.cluster,
-                      sabnzbd.media.svc.cluster.local
+                    SABNZBD__HOST_WHITELIST_ENTRIES: sabnzbd, sabnzbd.media, sabnzbd.media.svc, sabnzbd.media.svc.cluster, sabnzbd.media.svc.cluster.local
                   envFrom:
                     - secretRef:
                         name: sabnzbd-secrets
@@ -45,34 +40,34 @@ spec:
                     limits:
                       cpu: 1000m
                       memory: 1Gi
-                   securityContext:
-                     allowPrivilegeEscalation: false
-                     readOnlyRootFilesystem: false
-                     capabilities:
-                       drop:
-                         - ALL
-           defaultPodOptions:
-             securityContext:
-               runAsUser: 0
-               runAsGroup: 0
-               fsGroup: 0
-               fsGroupChangePolicy: OnRootMismatch
-           service:
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    readOnlyRootFilesystem: false
+                    capabilities:
+                      drop:
+                        - ALL
+              defaultPodOptions:
+                securityContext:
+                  runAsUser: 0
+                  runAsGroup: 0
+                  fsGroup: 0
+                  fsGroupChangePolicy: OnRootMismatch
+          service:
             app:
               controller: sabnzbd
               ports:
                 http:
                   port: *port
           persistence:
-              config:
-                existingClaim: sabnzbd-config-pvc
-                globalMounts:
-                  - path: /config
-              media:
-                type: hostPath
-                hostPath: /mnt/media/sabnzbd
-                globalMounts:
-                  - path: /mnt/media/sabnzbd
+            config:
+              existingClaim: sabnzbd-config-pvc
+              globalMounts:
+                - path: /config
+            media:
+              type: hostPath
+              hostPath: /mnt/media/sabnzbd
+              globalMounts:
+                - path: /mnt/media/sabnzbd
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
       path: apps/media/sabnzbd
