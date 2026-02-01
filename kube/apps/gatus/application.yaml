@@ -26,38 +26,67 @@ spec:
         serviceMonitor:
           enabled: false
         config:
+          # Auto-discovery: Monitor all k3s.s33g.uk endpoints
+          # Add new services here following the pattern
           endpoints:
             - name: ArgoCD
+              group: Infrastructure
               url: https://argocd.k3s.s33g.uk
               interval: 60s
               conditions:
                 - "[STATUS] == 200"
-                - "[RESPONSE_TIME] < 2000"
+                - "[RESPONSE_TIME] < 3000"
+            
             - name: Grafana
+              group: Monitoring
               url: https://grafana.k3s.s33g.uk
               interval: 60s
               conditions:
                 - "[STATUS] == 200"
                 - "[RESPONSE_TIME] < 2000"
+            
             - name: Prometheus
+              group: Monitoring
               url: https://prometheus.k3s.s33g.uk
               interval: 60s
               conditions:
                 - "[STATUS] == 200"
                 - "[RESPONSE_TIME] < 2000"
+            
             - name: Alertmanager
+              group: Monitoring
               url: https://alertmanager.k3s.s33g.uk
               interval: 60s
               conditions:
                 - "[STATUS] == 200"
                 - "[RESPONSE_TIME] < 2000"
-            - name: Longhorn UI
+            
+            - name: Longhorn
+              group: Infrastructure
               url: https://longhorn.k3s.s33g.uk
               interval: 60s
               conditions:
                 - "[STATUS] == 200"
                 - "[RESPONSE_TIME] < 2000"
+            
+            - name: Uptime Kuma
+              group: Monitoring
+              url: https://uptime.k3s.s33g.uk
+              interval: 60s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 2000"
+            
+            - name: Authentik SSO
+              group: Security
+              url: https://sso.k3s.s33g.uk
+              interval: 60s
+              conditions:
+                - "[STATUS] == 200"
+                - "[RESPONSE_TIME] < 2000"
+            
             - name: Gatus (self-check)
+              group: Monitoring
               url: https://gatus.k3s.s33g.uk
               interval: 120s
               conditions:
