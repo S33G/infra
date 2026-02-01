@@ -8,9 +8,56 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/seeg/infra-kube
-    path: apps/media/deemix
-    targetRevision: HEAD
+    repoURL: oci://ghcr.io/bjw-s-labs/helm
+    chart: app-template
+    targetRevision: 4.6.2
+    helm:
+      releaseName: deemix
+      values: |
+        controllers:
+          deemix:
+            containers:
+              app:
+                image:
+                  repository: ghcr.io/bambanah/deemix
+                  tag: v4.3.3
+                env:
+                  TZ: Europe/London
+                  PUID: "1000"
+                  PGID: "1000"
+                probes:
+                  liveness:
+                    enabled: true
+                  readiness:
+                    enabled: true
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 128Mi
+                  limits:
+                    cpu: 500m
+                    memory: 512Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: false
+                  capabilities:
+                    drop:
+                      - ALL
+        service:
+          app:
+            controller: deemix
+            ports:
+              http:
+                port: 6595
+        persistence:
+          config:
+            existingClaim: deemix-config-pvc
+            globalMounts:
+              - path: /config
+          media:
+            existingClaim: media-pvc
+            globalMounts:
+              - path: /downloads
   destination:
     server: https://kubernetes.default.svc
     namespace: media

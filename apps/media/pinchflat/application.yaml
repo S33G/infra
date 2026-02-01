@@ -8,9 +8,56 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/seeg/infra-kube
-    path: apps/media/pinchflat
-    targetRevision: HEAD
+    repoURL: oci://ghcr.io/bjw-s-labs/helm
+    chart: app-template
+    targetRevision: 4.6.2
+    helm:
+      releaseName: pinchflat
+      values: |
+        controllers:
+          pinchflat:
+            containers:
+              app:
+                image:
+                  repository: ghcr.io/kieraneglin/pinchflat
+                  tag: latest
+                env:
+                  TZ: Europe/London
+                  PUID: "1000"
+                  PGID: "1000"
+                probes:
+                  liveness:
+                    enabled: true
+                  readiness:
+                    enabled: true
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 256Mi
+                  limits:
+                    cpu: 1000m
+                    memory: 1Gi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: false
+                  capabilities:
+                    drop:
+                      - ALL
+        service:
+          app:
+            controller: pinchflat
+            ports:
+              http:
+                port: 8945
+        persistence:
+          config:
+            existingClaim: pinchflat-config-pvc
+            globalMounts:
+              - path: /config
+          media:
+            existingClaim: media-pvc
+            globalMounts:
+              - path: /downloads
   destination:
     server: https://kubernetes.default.svc
     namespace: media

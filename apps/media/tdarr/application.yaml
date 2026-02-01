@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: plex
+  name: tdarr
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
@@ -9,77 +9,79 @@ spec:
   project: default
   sources:
     - repoURL: https://k8s-home-lab.github.io/helm-charts/
-      chart: plex
-      targetRevision: 7.2.1
+      chart: tdarr
+      targetRevision: 5.0.1
       helm:
-        releaseName: plex
+        releaseName: tdarr
         values: |
           image:
-            repository: lscr.io/linuxserver/plex
-            tag: 1.41.7
+            repository: ghcr.io/haveagitgat/tdarr
+            tag: 2.58.02
           env:
             TZ: Europe/London
             PUID: "1000"
             PGID: "1000"
-            PLEX_CLAIM:
-              valueFrom:
-                secretKeyRef:
-                  name: plex-secrets
-                  key: plex_claim
+            serverIP: 0.0.0.0
+            serverPort: "8266"
+            webUIPort: "8265"
           service:
             main:
               ports:
                 http:
-                  port: 32400
+                  port: 8265
+                server:
+                  enabled: true
+                  port: 8266
           persistence:
             config:
               enabled: true
-              existingClaim: plex-config-pvc
-            movies:
+              existingClaim: tdarr-config-pvc
+              mountPath: /app/configs
+            data:
+              enabled: true
+              existingClaim: tdarr-data-pvc
+              mountPath: /app/server
+            media:
               enabled: true
               existingClaim: media-pvc
-              subPath: Movies
-              mountPath: /movies
-            tv:
+              mountPath: /media
+            shared:
               enabled: true
-              existingClaim: media-pvc
-              subPath: TV
-              mountPath: /tv
+              type: emptyDir
+              mountPath: /temp
+              sizeLimit: 100Gi
           resources:
             requests:
-              cpu: 500m
+              cpu: 200m
               memory: 512Mi
             limits:
-              cpu: 2000m
-              memory: 2Gi
+              cpu: 4000m
+              memory: 4Gi
           probes:
             liveness:
               enabled: true
               custom: true
               spec:
                 httpGet:
-                  path: /identity
-                  port: http
+                  path: /api/v2/status
+                  port: 8265
                 initialDelaySeconds: 60
                 periodSeconds: 30
-                timeoutSeconds: 5
+                timeoutSeconds: 10
                 failureThreshold: 3
             readiness:
               enabled: true
               custom: true
               spec:
                 httpGet:
-                  path: /identity
-                  port: http
+                  path: /api/v2/status
+                  port: 8265
                 initialDelaySeconds: 30
                 periodSeconds: 10
                 timeoutSeconds: 5
                 failureThreshold: 2
-    - repoURL: git@github.com:s33g/infra.git
-      targetRevision: HEAD
-      path: apps/media/plex
-      directory:
-        include: 'external-secret.yaml'
+          node:
+            enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: media

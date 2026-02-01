@@ -8,9 +8,76 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/seeg/infra-kube
-    path: apps/media/unpackerr
-    targetRevision: HEAD
+    repoURL: oci://ghcr.io/bjw-s-labs/helm
+    chart: app-template
+    targetRevision: 4.6.2
+    helm:
+      releaseName: unpackerr
+      values: |
+        controllers:
+          unpackerr:
+            containers:
+              app:
+                image:
+                  repository: ghcr.io/unpackerr/unpackerr
+                  tag: 0.14.5
+                env:
+                  TZ: Europe/London
+                  UN_WEBSERVER_METRICS: "true"
+                  UN_SONARR_0_URL: http://sonarr.media.svc.cluster.local
+                  UN_SONARR_0_PATHS_0: /media/downloads
+                  UN_RADARR_0_URL: http://radarr.media.svc.cluster.local
+                  UN_RADARR_0_PATHS_0: /media/downloads
+                envFrom:
+                  - secretRef:
+                      name: unpackerr-secret
+                probes:
+                  liveness:
+                    enabled: true
+                  readiness:
+                    enabled: true
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 128Mi
+                  limits:
+                    cpu: 500m
+                    memory: 4Gi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  capabilities:
+                    drop:
+                      - ALL
+        defaultPodOptions:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 568
+            runAsGroup: 568
+            fsGroup: 568
+            fsGroupChangePolicy: OnRootMismatch
+        service:
+          app:
+            controller: unpackerr
+            ports:
+              http:
+                port: 5656
+        serviceMonitor:
+          app:
+            serviceName: unpackerr
+            endpoints:
+              - port: http
+                scheme: http
+                path: /metrics
+                interval: 1m
+                scrapeTimeout: 10s
+        persistence:
+          logs:
+            type: emptyDir
+          media:
+            existingClaim: media-pvc
+            globalMounts:
+              - path: /media
   destination:
     server: https://kubernetes.default.svc
     namespace: media

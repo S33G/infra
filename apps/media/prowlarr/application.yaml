@@ -7,10 +7,63 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
-  source:
-    repoURL: https://github.com/seeg/infra-kube
-    path: apps/media/prowlarr
-    targetRevision: HEAD
+  sources:
+    - repoURL: https://k8s-home-lab.github.io/helm-charts/
+      chart: prowlarr
+      targetRevision: 5.2.0
+      helm:
+        releaseName: prowlarr
+        values: |
+          image:
+            repository: lscr.io/linuxserver/prowlarr
+            tag: 1.35.1
+          env:
+            TZ: Europe/London
+            PUID: "1000"
+            PGID: "1000"
+          service:
+            main:
+              ports:
+                http:
+                  port: 9696
+          persistence:
+            config:
+              enabled: true
+              existingClaim: prowlarr-config-pvc
+            media:
+              enabled: true
+              existingClaim: media-pvc
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /ping
+                  port: http
+                initialDelaySeconds: 30
+                periodSeconds: 30
+                timeoutSeconds: 5
+                failureThreshold: 3
+            readiness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /ping
+                  port: http
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                timeoutSeconds: 5
+                failureThreshold: 2
   destination:
     server: https://kubernetes.default.svc
     namespace: media

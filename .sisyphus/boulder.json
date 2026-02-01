@@ -1,9 +1,8 @@
 {
-  "active_plan": "/home/seeg/infra/kube/.sisyphus/plans/k3s-coolkid-homelab.md",
-  "started_at": "2026-01-31T15:43:05.580Z",
+  "active_plan": "/home/seeg/infra/kube/.sisyphus/plans/docker-k8s-migration.md",
+  "started_at": "2026-02-01T13:36:41.673Z",
   "session_ids": [
-    "ses_3eb597821ffeyuivElGe2iJo6w",
-    "ses_3eb597821ffeyuivElGe2iJo6w"
+    "ses_3e7354e44ffeA38eP4YgNeLwtO"
   ],
-  "plan_name": "k3s-coolkid-homelab"
+  "plan_name": "docker-k8s-migration"
 }

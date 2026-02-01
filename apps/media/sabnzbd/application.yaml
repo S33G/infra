@@ -7,10 +7,70 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
-  source:
-    repoURL: https://github.com/seeg/infra-kube
-    path: apps/media/sabnzbd
-    targetRevision: HEAD
+  sources:
+    - repoURL: oci://ghcr.io/bjw-s-labs/helm
+      chart: app-template
+      targetRevision: 4.6.2
+      helm:
+        releaseName: sabnzbd
+        values: |
+          controllers:
+            sabnzbd:
+              containers:
+                app:
+                  image:
+                    repository: ghcr.io/home-operations/sabnzbd
+                    tag: 4.5.5
+                  env:
+                    TZ: Europe/London
+                    SABNZBD__PORT: &port 80
+                    SABNZBD__HOST_WHITELIST_ENTRIES: >-
+                      sabnzbd,
+                      sabnzbd.media,
+                      sabnzbd.media.svc,
+                      sabnzbd.media.svc.cluster,
+                      sabnzbd.media.svc.cluster.local
+                  envFrom:
+                    - secretRef:
+                        name: sabnzbd-secrets
+                  probes:
+                    liveness:
+                      enabled: true
+                    readiness:
+                      enabled: true
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 256Mi
+                    limits:
+                      cpu: 1000m
+                      memory: 1Gi
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    readOnlyRootFilesystem: false
+                    capabilities:
+                      drop:
+                        - ALL
+          service:
+            app:
+              controller: sabnzbd
+              ports:
+                http:
+                  port: *port
+          persistence:
+            config:
+              existingClaim: sabnzbd-config-pvc
+              globalMounts:
+                - path: /config
+            media:
+              existingClaim: media-pvc
+              globalMounts:
+                - path: /data
+    - repoURL: git@github.com:s33g/infra.git
+      targetRevision: HEAD
+      path: apps/media/sabnzbd
+      directory:
+        include: 'external-secret.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: media
