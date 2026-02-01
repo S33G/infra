@@ -6,9 +6,9 @@ metadata:
   annotations:
     # Reflector will automatically copy the generated secret to these namespaces
     reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
-    reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "gatus,argocd,monitoring,longhorn-system,uptime-kuma,default"
+    reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "gatus,argocd,monitoring,longhorn-system,uptime-kuma,default,authentik"
     reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
-    reflector.v1.k8s.emberstack.com/reflection-auto-namespaces: "gatus,argocd,monitoring,longhorn-system,uptime-kuma,default"
+    reflector.v1.k8s.emberstack.com/reflection-auto-namespaces: "gatus,argocd,monitoring,longhorn-system,uptime-kuma,default,authentik"
 spec:
   secretName: wildcard-k3s-s33g-uk-tls
   issuerRef:
