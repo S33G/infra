@@ -51,7 +51,7 @@ spec:
                     capabilities:
                       drop:
                         - ALL
-           service:
+          service:
              app:
                controller: sabnzbd
                ports:
