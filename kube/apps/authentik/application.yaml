@@ -1,0 +1,100 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://charts.goauthentik.io
+    chart: authentik
+    targetRevision: 2025.12.2
+    helm:
+      releaseName: authentik
+      values: |
+        authentik:
+          secret_key: "RoFCf5v849KkFPxiNwyndtpi0rYUIoTIQtgtPiwHWNa7b0XMfxW36wgppd73aR9YaTc="
+          error_reporting:
+            enabled: false
+          postgresql:
+            password: "JMG+ljUCxExk9iYpRLHlzBJj+cqA/dEcerwGQQMlBvPnsYMY9jDrrVtpVEaBCwnrZ10="
+          log_level: info
+          email:
+            host: ""
+            port: 587
+            use_tls: true
+            from: ""
+        
+        server:
+          replicas: 1
+          ingress:
+            enabled: false
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+        
+        worker:
+          replicas: 1
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+        
+        postgresql:
+          enabled: true
+          auth:
+            password: "JMG+ljUCxExk9iYpRLHlzBJj+cqA/dEcerwGQQMlBvPnsYMY9jDrrVtpVEaBCwnrZ10="
+            database: authentik
+          primary:
+            persistence:
+              enabled: true
+              storageClass: longhorn
+              size: 10Gi
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+        
+        redis:
+          enabled: true
+          master:
+            persistence:
+              enabled: true
+              storageClass: longhorn
+              size: 2Gi
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 512Mi
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

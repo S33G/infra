@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: authentik
+  namespace: authentik
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sso.k3s.s33g.uk
+    external-dns.alpha.kubernetes.io/target: 10.10.0.240
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`sso.k3s.s33g.uk`)
+      kind: Rule
+      services:
+        - name: authentik-server
+          port: 80
+  tls:
+    secretName: wildcard-k3s-s33g-uk-tls
