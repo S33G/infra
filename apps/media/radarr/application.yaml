@@ -48,27 +48,9 @@ spec:
               memory: 512Mi
           probes:
             liveness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  path: /ping
-                  port: http
-                initialDelaySeconds: 30
-                periodSeconds: 30
-                timeoutSeconds: 5
-                failureThreshold: 3
+              enabled: false
             readiness:
-              enabled: true
-              custom: true
-              spec:
-                httpGet:
-                  path: /ping
-                  port: http
-                initialDelaySeconds: 10
-                periodSeconds: 10
-                timeoutSeconds: 5
-                failureThreshold: 2
+              enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: media
