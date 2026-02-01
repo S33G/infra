@@ -51,15 +51,15 @@ spec:
             ports:
               http:
                 port: 8081
-         persistence:
-           config:
-             existingClaim: metube-config-pvc
-             globalMounts:
-               - path: /config
-           media:
-             existingClaim: metube-media-pvc
-             globalMounts:
-               - path: /mnt/media/metube
+        persistence:
+          config:
+            existingClaim: metube-config-pvc
+            globalMounts:
+              - path: /config
+          media:
+            existingClaim: metube-media-pvc
+            globalMounts:
+              - path: /mnt/media/metube
   destination:
     server: https://kubernetes.default.svc
     namespace: media
