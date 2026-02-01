@@ -57,7 +57,7 @@ spec:
             ports:
               http:
                 port: 6595
-         persistence:
+        persistence:
            config:
              existingClaim: deemix-config-pvc
              globalMounts:
