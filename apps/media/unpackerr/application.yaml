@@ -71,14 +71,14 @@ spec:
                 path: /metrics
                 interval: 1m
                 scrapeTimeout: 10s
-        persistence:
-           logs:
-             type: emptyDir
-           media:
-             type: hostPath
-             hostPath: /mnt/media/unpackerr
-             globalMounts:
-               - path: /mnt/media/unpackerr
+         persistence:
+          logs:
+            type: emptyDir
+          media:
+            type: hostPath
+            hostPath: /mnt/media/unpackerr
+            globalMounts:
+              - path: /mnt/media/unpackerr
   destination:
     server: https://kubernetes.default.svc
     namespace: media
