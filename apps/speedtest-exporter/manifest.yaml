@@ -56,9 +56,9 @@ spec:
             httpGet:
               path: /metrics
               port: metrics
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 5
+            timeoutSeconds: 10
             failureThreshold: 3
           securityContext:
             allowPrivilegeEscalation: false
