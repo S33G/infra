@@ -25,12 +25,9 @@ spec:
               memory: 512Mi
           serviceMonitor:
             enabled: false
-          configExistingConfigMap: gatus-config
     - repoURL: git@github.com:s33g/infra.git
       targetRevision: HEAD
       path: apps/gatus
-      directory:
-        include: 'config.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: gatus
