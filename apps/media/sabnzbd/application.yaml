@@ -14,6 +14,14 @@ spec:
       helm:
         releaseName: sabnzbd
         values: |
+          global:
+            nameOverride: sabnzbd
+          defaultPodOptions:
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+              fsGroup: 0
+              fsGroupChangePolicy: OnRootMismatch
           controllers:
             sabnzbd:
               containers:
@@ -46,12 +54,6 @@ spec:
                     capabilities:
                       drop:
                         - ALL
-              defaultPodOptions:
-                securityContext:
-                  runAsUser: 0
-                  runAsGroup: 0
-                  fsGroup: 0
-                  fsGroupChangePolicy: OnRootMismatch
           service:
             app:
               controller: sabnzbd
