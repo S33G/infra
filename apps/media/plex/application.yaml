@@ -35,16 +35,10 @@ spec:
             config:
               enabled: true
               existingClaim: plex-config-pvc
-            movies:
+            media:
               enabled: true
               existingClaim: media-pvc
-              subPath: Movies
-              mountPath: /movies
-            tv:
-              enabled: true
-              existingClaim: media-pvc
-              subPath: TV
-              mountPath: /tv
+              mountPath: /media
           resources:
             requests:
               cpu: 500m

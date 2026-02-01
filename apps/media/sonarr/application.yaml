@@ -34,11 +34,6 @@ spec:
               enabled: true
               existingClaim: media-pvc
               mountPath: /data
-            tv:
-              enabled: true
-              existingClaim: media-pvc
-              subPath: TV
-              mountPath: /tv
           resources:
             requests:
               cpu: 100m
