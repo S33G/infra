@@ -99,7 +99,7 @@ data:
         url: https://plex.k3s.s33g.uk
         interval: 120s
         conditions:
-          - "[STATUS] == 200"
+          - "[STATUS] == any(200,301,302)"
           - "[RESPONSE_TIME] < 3000"
 
       - name: MeTube
