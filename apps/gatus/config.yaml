@@ -46,14 +46,6 @@ data:
           - "[STATUS] == 200"
           - "[RESPONSE_TIME] < 2000"
 
-      - name: Uptime Kuma
-        group: Monitoring
-        url: https://uptime.k3s.s33g.uk
-        interval: 60s
-        conditions:
-          - "[STATUS] == 200"
-          - "[RESPONSE_TIME] < 2000"
-
       - name: Authentik SSO
         group: Security
         url: https://sso.k3s.s33g.uk
@@ -130,14 +122,6 @@ data:
         group: Media
         url: https://pinchflat.k3s.s33g.uk
         interval: 120s
-        conditions:
-          - "[STATUS] == 200"
-          - "[RESPONSE_TIME] < 2000"
-
-      - name: Go API
-        group: Applications
-        url: https://api.k3s.s33g.uk
-        interval: 60s
         conditions:
           - "[STATUS] == 200"
           - "[RESPONSE_TIME] < 2000"
