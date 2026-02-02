@@ -19,7 +19,7 @@ data:
         url: https://grafana.k3s.s33g.uk
         interval: 60s
         conditions:
-          - "[STATUS] == 200"
+          - "[STATUS] == any(200,301,302)"
           - "[RESPONSE_TIME] < 2000"
 
       - name: Prometheus
