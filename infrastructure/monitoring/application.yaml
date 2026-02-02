@@ -22,12 +22,12 @@ spec:
                     resources:
                       requests:
                         storage: 10Gi
-           grafana:
-             persistence:
-               enabled: true
-               storageClassName: longhorn
-               size: 5Gi
-             adminPassword: "grafana123"
+          grafana:
+            persistence:
+              enabled: true
+              storageClassName: longhorn
+              size: 5Gi
+            adminPassword: "grafana123"
             envFromSecrets:
               - name: grafana-oauth-secret
             grafana.ini:
