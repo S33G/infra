@@ -33,7 +33,7 @@ spec:
             enabled: false
           resources:
             requests:
-              cpu: 100mI
+              cpu: 100m
               memory: 512Mi
             limits:
               cpu: 1000m
@@ -52,18 +52,6 @@ spec:
         blueprints:
           configMaps:
             - authentik-blueprints
-
-        env:
-          ARGOCD_CLIENT_SECRET:
-            valueFrom:
-              secretKeyRef:
-                name: authentik-oauth-secrets
-                key: argocd-client-secret
-          GRAFANA_CLIENT_SECRET:
-            valueFrom:
-              secretKeyRef:
-                name: authentik-oauth-secrets
-                key: grafana-client-secret
 
         postgresql:
           enabled: true

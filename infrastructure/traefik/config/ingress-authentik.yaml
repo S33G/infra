@@ -8,12 +8,12 @@ metadata:
     external-dns.alpha.kubernetes.io/target: 10.10.0.240
 spec:
   entryPoints:
-    - websecure
+  - websecure
   routes:
-    - match: Host(`sso.k3s.s33g.uk`)
-      kind: Rule
-      services:
-        - name: authentik-server
-          port: 80
+  - match: Host(`sso.k3s.s33g.uk`)
+    kind: Rule
+    services:
+    - name: authentik
+      port: 80
   tls:
     secretName: wildcard-k3s-s33g-uk-tls
